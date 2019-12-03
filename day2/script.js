@@ -1,32 +1,46 @@
 const { test, expect } = require('../assertions');
 const { data } = require('./data');
 
-const calc = (array, currentPosition, targetPosition, multiply) => {
-  const position1 = array[currentPosition];
-  const position2 = array[currentPosition + 1];
+/**
+ *
+ * @param array the array to adjust
+ * @param param1 {int} the first parameter to run the calculation on
+ * @param param2 {int} the second parameter to run  the calculation on
+ * @param multiply {bool}
+ * @returns {*}
+ */
+const calc = (param1, param2, multiply) => {
   const addOrSubtract = (multiply ? '*' : '+' );
-
-  const total = eval(array[position1] + addOrSubtract + array[position2]);
-
-  array.splice(targetPosition, 1, parseInt(total, 10));
-  return array;
+  const total = eval(param1 + addOrSubtract + param2);
+  return parseInt(total, 10);
 };
 
-const GAProgram = (intCode, startPosition) => {
-  let newCode = intCode;
-  for (let i = startPosition; i < newCode.length; i++) {
-    const targetPosition = intCode[i + 3];
-    if (newCode[i] === 1) {
-      newCode = calc(intCode, i + 1, targetPosition);
-      i += 3;
-    }
-    if (newCode[i] === 2) {
-      newCode = calc(intCode, i + 1, targetPosition, true);
-      i += 3;
-    }
-    if (newCode[i] === 99) {
+/**
+ * GAProgram
+ * @param intCode {array} the array to run the program on
+ * @param startAddress {int} the location where the program should start
+ * @returns {array} the new array calculated by the gravity assist program
+ * @constructor
+ */
+const GAProgram = (intCode, startAddress) => {
+  let newCode = [...intCode]; // make array immutable
+  for (let instructionPointer = startAddress; instructionPointer < newCode.length; instructionPointer++) {
+    const opCode = newCode[instructionPointer];
+    const address1 = newCode[instructionPointer + 1];
+    const address2  = newCode[instructionPointer + 2];
+    const address3 = newCode[instructionPointer + 3];
+
+    if (opCode === 1)
+      newCode.splice(address3, 1, calc(newCode[address1], newCode[address2], false));
+
+    if (opCode === 2)
+      newCode.splice(address3, 1, calc(newCode[address1], newCode[address2], true));
+
+    if (opCode === 99)
       break;
-    }
+
+    /* move to the next instruction, step forward 4 positions (1 opcode + 3 parameters) */
+    instructionPointer += 4 - 1; // -1 (array index starts at 0)
   }
   return newCode;
 };
