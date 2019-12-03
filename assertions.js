@@ -5,6 +5,11 @@ const expect = function (actual) {
       if (actual !== expected) {
         throw new Error(`${actual} is not equal to ${expected}`);
       }
+    },
+    toEqual(expected) {
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`${actual} is not equal to ${expected}`);
+      }
     }
   }
 };
