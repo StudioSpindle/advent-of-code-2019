@@ -1,69 +1,101 @@
-const { test, expect } = require('../assertions');
-const { locations } = require('./locations');
-
-const regExpLetter = /[a-zA-Z]/;
-const regExtDigit = /\d+/;
-
-const calcPath = (pathDefinition) => {
-  const direction = pathDefinition.match(regExpLetter)[0];
-  const numberOfSteps = pathDefinition.match(regExtDigit)[0];
-  let wirePath = [];
-  for (let i = 0; i <= numberOfSteps; i++) {
-    const pathPoint = direction + i;
-    wirePath.push(pathPoint);
-  }
-  return [...wirePath];
-};
-
-const directionOperations = {
-  "R": (index, lastLocation) => {
-    return {
-      x: lastLocation.x + index,
-      y: lastLocation.y
-    }
-  },
-  "U": (index, lastLocation) => {
-    return {
-      x: lastLocation.x,
-      y: lastLocation.y + index
-    }
-  },
-  "L": (index, lastLocation) => {
-    return {
-      x: lastLocation.x - index,
-      y: lastLocation.y
-    }
-  },
-  "D": (index, lastLocation) => {
-    return {
-      x: lastLocation.x,
-      y: lastLocation.y - index
-    }
-  },
-};
-
 /**
- * intersectionCalc
- * @description Calculates the Manhattan distance of the closest intersection of two paths
- * @returns {number} Manhattan distance
+ * @namespace day3Utils
  */
-const intersectionCalc = (wirePaths1, wirePaths2) => {
+const day3Utils = function() {
+  const regExpLetter = /[a-zA-Z]/;
+  const regExtDigit = /\d+/;
 
-  const initLocations = (pathsToPlot) => {
+  /**
+   * @description Operations to calculate x and y coordinates based on the direction
+   * @type {{R: (function(*, *): {x: *, y: *}), D: (function(*, *): {x: *, y: number}), U: (function(*, *): {x: *, y: *}), L: (function(*, *): {x: number, y: *})}}
+   */
+  const directionOperations = {
+    R: (index, lastLocation) => {
+      return {
+        x: lastLocation.x + index,
+        y: lastLocation.y
+      };
+    },
+    U: (index, lastLocation) => {
+      return {
+        x: lastLocation.x,
+        y: lastLocation.y + index
+      };
+    },
+    L: (index, lastLocation) => {
+      return {
+        x: lastLocation.x - index,
+        y: lastLocation.y
+      };
+    },
+    D: (index, lastLocation) => {
+      return {
+        x: lastLocation.x,
+        y: lastLocation.y - index
+      };
+    }
+  };
+
+  /**
+   * @description Calculates a full path based on a wire.
+   * @param {string} pathDefinition The path definition as defined by 'locations'.
+   * @returns {Array} A full wire containing all the wire points.
+   */
+  const fullPath = pathDefinition => {
+    const direction = pathDefinition.match(regExpLetter)[0];
+    const numberOfSteps = pathDefinition.match(regExtDigit)[0];
+    let wirePath = [];
+    for (let i = 0; i <= numberOfSteps; i++) {
+      const pathPoint = direction + i;
+      wirePath.push(pathPoint);
+    }
+    return [...wirePath];
+  };
+
+  /**
+   * @desc Makes an object stringified
+   * @param {Object} object The x and y coordinate
+   * @returns {string}
+   */
+  const stringified = object =>
+      JSON.stringify(
+          Object.entries(object).sort((a, b) => a[0].localeCompare(b[0]))
+      );
+
+  /**
+   * @desc Filters out the starting location.
+   * @param {Object} object to filter.
+   * @returns {boolean} Whether the location provided is the starting location or not.
+   */
+  const notStartingLocation = ({ locationOnGrid }) =>
+      JSON.stringify(locationOnGrid) !== JSON.stringify({ x: 0, y: 0 });
+
+  /**
+   * @desc Calculates how far from zero a number is.
+   * @param {number} The number to match against.
+   * @returns {number} The distance from zero.
+   */
+  const pointsFromZero = number => Math.abs(number - 0);
+
+  /**
+   * @param pathToPlot {Array} Containing all the wire points for a single wire path
+   * @returns {Array} Containing a full path with x and y coordinates for a wire path
+   */
+  const initLocations = pathToPlot => {
     let gridLocations = [];
     let lastLocation = {
       x: 0,
-      y: 0,
+      y: 0
     };
 
-    pathsToPlot.forEach((pathToPlot) => {
+    pathToPlot.forEach(points => {
       const result = [];
-      const direction = pathToPlot[0].match(regExpLetter)[0];
+      const direction = points[0].match(regExpLetter)[0];
 
-      pathToPlot.map((location, index) => {
+      points.map((location, index) => {
         result.push({
           locationPath: location,
-          locationOnGrid: directionOperations[direction](index, lastLocation),
+          locationOnGrid: directionOperations[direction](index, lastLocation)
         });
       });
 
@@ -77,55 +109,61 @@ const intersectionCalc = (wirePaths1, wirePaths2) => {
     return [].concat.apply([], gridLocations);
   };
 
-  const locationsWireRoute1 = initLocations(wirePaths1.map((path) => calcPath(path)));
-  const locationsWireRoute2 = initLocations(wirePaths2.map((path) => calcPath(path)));
+  /**
+   * @description Calculates the Manhattan distance of the closest intersection of two wire paths
+   * @param {Array} wirePaths1 A wire containing the directions with number of steps.
+   * @param  {Array} wirePaths2 A wire containing the directions with number of steps.
+   * @returns {number} Manhattan distance
+   */
+  const intersectionClosestCalc = (wirePaths1, wirePaths2) => {
 
-  // DEBUG
-  // console.log(locationsWireRoute1);
-  // console.log(locationsWireRoute2);
+    const locationsWireRoute1 = initLocations(
+      wirePaths1.map(path => fullPath(path))
+    );
+    const locationsWireRoute2 = initLocations(
+      wirePaths2.map(path => fullPath(path))
+    );
 
-  // TODO: check if this works if either one (locationsWireRoutex) is smaller than the other
+    /**
+     * @desc normalise key/value pairs for comparison
+     * @type {Set<string>}
+     */
+    const stringifiedLocationsWireRoute1 = new Set(
+      locationsWireRoute1.map(({ locationOnGrid }) =>
+        stringified(locationOnGrid)
+      )
+    );
 
-  // normalise key/value pairs for comparison
-  const stringified = o => JSON.stringify(Object.entries(o).sort((a, b) => a[0].localeCompare(b[0])));
-  const notStartingLocation = ({locationOnGrid}) => JSON.stringify(locationOnGrid) !== JSON.stringify({ x: 0, y: 0 });
+    /**
+     * @desc filters the duplicate routes out
+     * @note switch the two arrays (locationsWireRoute<x>) will change the returned location path
+     * @type {Array}
+     */
+    const commonPaths = locationsWireRoute2.filter(({ locationOnGrid }) =>
+      stringifiedLocationsWireRoute1.has(stringified(locationOnGrid))
+    );
 
-  // note: switch the two arrays (locationsWireRoute<x>) will change the returned location path
-  const stringifiedLocationsWireRoute1 = new Set(locationsWireRoute1.map(({ locationOnGrid }) => stringified(locationOnGrid)));
-  const commonPaths = locationsWireRoute2.filter(({ locationOnGrid }) => stringifiedLocationsWireRoute1.has(stringified(locationOnGrid)));
+    const filteredCommonPaths = commonPaths.filter(notStartingLocation);
 
-  // DEBUG
-  // console.table(commonPaths);
+    /**
+     * @description Manhattan distance can be used, so x + y = distance from starting location
+     * @type {Object}
+     */
+    const lowest = filteredCommonPaths.reduce((prev, curr) => {
+      return pointsFromZero(prev.locationOnGrid.x) +
+        pointsFromZero(prev.locationOnGrid.y) <
+        pointsFromZero(curr.locationOnGrid.x) +
+          pointsFromZero(curr.locationOnGrid.y)
+        ? prev
+        : curr;
+    });
 
-  const filteredCommonPaths = commonPaths.filter(notStartingLocation);
-  const pointsFromZero = (number) => Math.abs(number - 0);
-  // TODO: make this part more readable
-  const lowest = filteredCommonPaths.reduce((prev, curr) => {
-    return pointsFromZero(prev.locationOnGrid.x) + pointsFromZero(prev.locationOnGrid.y) < pointsFromZero(curr.locationOnGrid.x) + pointsFromZero(curr.locationOnGrid.y) ? prev : curr;
-  });
+    return lowest.locationOnGrid.x + lowest.locationOnGrid.y;
+  };
 
-  // DEBUG
-  // console.table(lowest);
-
-  return lowest.locationOnGrid.x + lowest.locationOnGrid.y;
+  return {
+    intersectionClosestCalc: intersectionClosestCalc
+  };
 };
 
-test('test [["R8","U5","L5","D3"],["U7","R6","D4","L4"]]', () => {
-  const testProgram = [["R8","U5","L5","D3"],["U7","R6","D4","L4"]];
-  const testProgramResult = 6;
-  expect(intersectionCalc(testProgram[0], testProgram[1])).toEqual(testProgramResult);
-});
-
-test('test [["R75","D30","R83","U83","L12","D49","R71","U7","L72"],["U62","R66","U55","R34","D71","R55","D58","R83"]]', () => {
-  const testProgram = [["R75","D30","R83","U83","L12","D49","R71","U7","L72"],["U62","R66","U55","R34","D71","R55","D58","R83"]];
-  const testProgramResult = 159;
-  expect(intersectionCalc(testProgram[0], testProgram[1])).toEqual(testProgramResult);
-});
-
-test('test [["R98","U47","R26","D63","R33","U87","L62","D20","R33","U53","R51"],["U98","R91","D20","R16","D67","R40","U7","R15","U6","R7"]]', () => {
-  const testProgram = [["R98","U47","R26","D63","R33","U87","L62","D20","R33","U53","R51"],["U98","R91","D20","R16","D67","R40","U7","R15","U6","R7"]];
-  const testProgramResult = 135;
-  expect(intersectionCalc(testProgram[0], testProgram[1])).toEqual(testProgramResult);
-});
-
-console.log(`Answer of day 3, part 1: ${intersectionCalc(locations[0], locations[1])}`);
+module.exports = { day3Utils };

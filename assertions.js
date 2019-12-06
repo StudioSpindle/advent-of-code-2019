@@ -1,5 +1,9 @@
-
-const expect = function (actual) {
+/**
+ *
+ * @param actual
+ * @returns {{toEqual(*=): void, toBe(*): void}}
+ */
+const expect = function(actual) {
   return {
     toBe(expected) {
       if (actual !== expected) {
@@ -11,10 +15,15 @@ const expect = function (actual) {
         throw new Error(`${actual} is not equal to ${expected}`);
       }
     }
-  }
+  };
 };
 
-const test = function (title, callback) {
+/**
+ *
+ * @param title
+ * @param callback
+ */
+const test = function(title, callback) {
   try {
     callback();
     console.log(`✓ ${title}`);
