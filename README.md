@@ -12,4 +12,3 @@ _Note: If you get a permission error to run the script make the script executabl
 To run a single test: `$ bin/test.sh <day_number>`.
 
 So if you want to test day 3: `$ bin/test.sh 3`.
-

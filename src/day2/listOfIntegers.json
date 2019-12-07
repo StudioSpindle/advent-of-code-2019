@@ -1,4 +1,4 @@
-const listOfIntegers = [
+[
   1,
   12,
   2,
@@ -164,6 +164,4 @@ const listOfIntegers = [
   14,
   0,
   0
-];
-
-module.exports = { listOfIntegers };
+]

@@ -1,16 +1,14 @@
-/**
- *
- * @param actual
- * @returns {{toEqual(*=): void, toBe(*): void}}
- */
-const expect = function(actual) {
+type TActual = string | number | Array<number>;
+type TExpected = string | number | Array<number>;
+
+const expect = function(actual: TActual) {
   return {
-    toBe(expected) {
+    toBe(expected: TExpected) {
       if (actual !== expected) {
         throw new Error(`${actual} is not equal to ${expected}`);
       }
     },
-    toEqual(expected) {
+    toEqual(expected: TExpected) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`${actual} is not equal to ${expected}`);
       }
@@ -18,12 +16,7 @@ const expect = function(actual) {
   };
 };
 
-/**
- *
- * @param title
- * @param callback
- */
-const test = function(title, callback) {
+const test = function(title: string, callback: () => void) {
   try {
     callback();
     console.log(`✓ ${title}`);
@@ -33,4 +26,4 @@ const test = function(title, callback) {
   }
 };
 
-module.exports = { test, expect };
+export { test, expect };
